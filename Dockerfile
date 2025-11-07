@@ -1,14 +1,10 @@
-# ----- GIAI ĐOẠN 1: Build (Xây dựng) -----
-# Sử dụng một image Maven (đã cài Java 17) để build file .war
-FROM maven:3.8-openjdk-17 AS builder
-WORKDIR /app
+FROM maven:3-eclipse-temurin-22 AS builder
+WORKDIR /deployServletProject
 COPY . .
-RUN mvn clean install
+RUN mvn clean package -DskipTests
 
-# ----- GIAI ĐOẠN 2: Run (Chạy) -----
-# Sử dụng image Tomcat (đã cài Java 17) để chạy
-FROM tomcat:10.1-jdk17
+FROM tomcat:jdk25
 RUN rm -rf /usr/local/tomcat/webapps/*
-
-# Sao chép file .war TỪ GIAI ĐOẠN 1 vào thư mục webapps của Tomcat
-COPY --from=builder /app/target/WebApp-1.0-SNAPSHOT.war /usr/local/tomcat/webapps/ROOT.war
+COPY --from=builder /deployServletProject/target/WebApp-1.0-SNAPSHOT.war /usr/local/tomcat/webapps/ROOT.war
+EXPOSE 8080
+CMD [ "catalina.sh", "run" ]
